@@ -1,9 +1,14 @@
 import { Text, View } from "react-native";
+import { SignedIn, useUser } from "@clerk/clerk-expo";
+import { SafeAreaView } from "react-native-safe-area-context";
 
 export default function Home() {
+  const { user } = useUser();
   return (
-    <View className={"flex flex-1 justify-center items-center"}>
-      <Text className={"text-green-300 text-5xl  text-center"}>Home</Text>
-    </View>
+    <SafeAreaView>
+      <SignedIn>
+        <Text>Hello {user?.emailAddresses[0].emailAddress}</Text>
+      </SignedIn>
+    </SafeAreaView>
   );
 }
