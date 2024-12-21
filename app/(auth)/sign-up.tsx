@@ -15,9 +15,12 @@ import { Link, router } from "expo-router";
 import OAuth from "@/components/OAuth";
 import { useSignUp } from "@clerk/clerk-expo";
 import { ReactNativeModal } from "react-native-modal";
+import { fetchAPI } from "@/lib/fetch";
 
 export default function SignUp() {
   const { isLoaded, signUp, setActive } = useSignUp();
+  const [showSuccessModal, setShowSuccessModal] = useState(false);
+
   const [verification, setVerification] = useState({
     state: "default",
     error: "",
@@ -50,6 +53,14 @@ export default function SignUp() {
       });
 
       if (signUpAttempt.status === "complete") {
+        await fetchAPI("/(api)/user", {
+          method: "POST",
+          body: JSON.stringify({
+            name: form.name,
+            email: form.email,
+            clerkId: signUpAttempt.createdUserId,
+          }),
+        });
         await setActive({ session: signUpAttempt.createdSessionId });
         setVerification({ ...verification, state: "success" });
       } else {
@@ -124,9 +135,11 @@ export default function SignUp() {
         </View>
         <ReactNativeModal
           isVisible={verification.state === "pending"}
-          onModalHide={() =>
-            setVerification({ ...verification, state: "success" })
-          }
+          onModalHide={() => {
+            if (verification.state === "success") {
+              setShowSuccessModal(true);
+            }
+          }}
         >
           <View className={"bg-white px-7 py-9 rounded-2xl min-h-[300px]"}>
             <Text className={"text-2xl font-JakartaSemiBold mb-2"}>
@@ -157,7 +170,7 @@ export default function SignUp() {
             />
           </View>
         </ReactNativeModal>
-        <ReactNativeModal isVisible={verification.state === "success"}>
+        <ReactNativeModal isVisible={showSuccessModal}>
           <View className={"bg-white px-7 py-9 rounded-2xl min-h-[300px]"}>
             <Image
               source={images.check}
